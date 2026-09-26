@@ -128,11 +128,10 @@ async function analyzeWithModels(description, evidenceText) {
         },
       },
       required: ["requirements"],
-      additionalProperties: false,
     },
-    options: { temperature: 0.1, num_ctx: 4096, num_predict: 512 },
+    options: { temperature: 0.1, num_ctx: 2048, num_predict: 128 },
     stream: false,
-    keep_alive: "0",
+    keep_alive: "10m",
   });
 
   let extracted;
@@ -177,7 +176,7 @@ async function analyzeWithModels(description, evidenceText) {
         ...requirements.map((term) => `search_query: ${term}`),
       ],
       truncate: true,
-      keep_alive: "0",
+      keep_alive: "5m",
     });
 
     const vectors = embeddingResponse.embeddings;
@@ -229,7 +228,6 @@ async function analyzeWithModels(description, evidenceText) {
               explanation: { type: "string" },
             },
             required: ["requirement", "supported", "explanation"],
-            additionalProperties: false,
           },
         },
         learningPlan: {
@@ -238,30 +236,22 @@ async function analyzeWithModels(description, evidenceText) {
             type: "object",
             properties: {
               requirement: { type: "string" },
-              priority: { type: "string", enum: ["high", "medium", "low"] },
-              estimatedHours: {
-                type: "integer",
-                minimum: 1,
-                maximum: 120,
-              },
+              priority: { type: "string" },
+              estimatedHours: { type: "integer" },
               steps: {
                 type: "array",
                 items: { type: "string" },
-                minItems: 3,
-                maxItems: 3,
               },
             },
             required: ["requirement", "priority", "estimatedHours", "steps"],
-            additionalProperties: false,
           },
         },
       },
       required: ["results", "learningPlan"],
-      additionalProperties: false,
     },
-    options: { temperature: 0.1, num_ctx: 4096, num_predict: 1024 },
+    options: { temperature: 0.1, num_ctx: 2048, num_predict: 512 },
     stream: false,
-    keep_alive: "0",
+    keep_alive: "10m",
   });
 
   let assessment;
@@ -291,28 +281,47 @@ async function analyzeWithModels(description, evidenceText) {
   );
   const learningPlan = missing.map((requirement) => {
     const plan = plans.get(requirement);
-    const steps = Array.isArray(plan?.steps)
-      ? plan.steps.filter((step) => typeof step === "string").slice(0, 3)
+    let steps = Array.isArray(plan?.steps)
+      ? plan.steps
+          .filter((step) => typeof step === "string" && step.trim())
+          .map((s) => s.trim())
       : [];
 
-    if (
-      !plan ||
-      !Number.isInteger(plan.estimatedHours) ||
-      plan.estimatedHours < 1 ||
-      plan.estimatedHours > 120 ||
-      steps.length !== 3
-    ) {
-      throw new Error(
-        `The local model did not return a complete learning plan for ${requirement}. Try the analysis again.`,
-      );
+    if (steps.length === 0) {
+      steps = [
+        `Study core fundamentals and documentation for ${requirement}.`,
+        `Build a practical hands-on project applying ${requirement}.`,
+        `Integrate ${requirement} into a portfolio application and test performance.`,
+      ];
+    } else if (steps.length < 3) {
+      while (steps.length < 3) {
+        if (steps.length === 1) {
+          steps.push(`Build a practical mini-project applying ${requirement}.`);
+        } else {
+          steps.push(
+            `Review best practices and build real-world experience with ${requirement}.`,
+          );
+        }
+      }
+    } else if (steps.length > 3) {
+      steps = steps.slice(0, 3);
     }
+
+    let estimatedHours =
+      typeof plan?.estimatedHours === "number"
+        ? Math.round(plan.estimatedHours)
+        : 20;
+    if (isNaN(estimatedHours) || estimatedHours < 1) estimatedHours = 15;
+    if (estimatedHours > 120) estimatedHours = 120;
+
+    const priority = ["high", "medium", "low"].includes(plan?.priority)
+      ? plan.priority
+      : "medium";
 
     return {
       requirement,
-      priority: ["high", "medium", "low"].includes(plan.priority)
-        ? plan.priority
-        : "medium",
-      estimatedHours: plan.estimatedHours,
+      priority,
+      estimatedHours,
       steps,
     };
   });

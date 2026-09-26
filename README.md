@@ -1,66 +1,111 @@
-# BuildCarrers
+# Build Carrier
 
-BuildCarrers is a local-first résumé and job-fit workspace. It compares a job description with evidence from a user's profile and résumé, identifies skills not yet demonstrated, and creates a prioritized learning plan with approximate practice-hour estimates.
+**Build Carrier** is a privacy-first, local AI résumé and career development workspace powered by local LLMs and embeddings. It compares job opportunities with evidence extracted from a candidate's profile and résumé, identifies skill gaps, and generates a personalized, trackable learning plan complete with practice-hour estimates and interactive flashcards.
 
-## What It Does
+---
 
-- Imports PDF, DOCX, and TXT résumés and extracts their text in the browser.
-- Stores profile details, résumé text, job descriptions, and learning-plan settings in browser local storage.
-- Uses Qwen3-4B-Instruct-2507 to extract job requirements and assess whether retrieved evidence supports them.
-- Uses Nomic Embed Text v1.5 to retrieve relevant passages from the supplied profile and résumé.
-- Creates three learning steps and an estimated number of focused practice hours for each unsupported requirement.
-- Recalculates the sequential learning timeline from the user's selected study hours per week.
+## 🌟 Key Features
 
-Practice-hour estimates are model-generated planning aids, not guarantees of proficiency or employment. Review the cited evidence and estimates yourself.
+- **📄 Local Résumé Parsing**: Extracts text directly in the browser from PDF, DOCX, and TXT files without uploading documents to external servers.
+- **🔒 Privacy-First Design**: All personal profiles, résumé text, saved opportunities, and progress tracking remain stored securely in your browser's local storage.
+- **🤖 Local RAG & Model Inference**: Uses local Ollama models (`Qwen3-4B-Instruct` & `Nomic-Embed-Text v1.5`) via Express (`server.js`) for requirement extraction and semantic passage matching.
+- **📊 Evidence Matching Ledger**: Compares required skills against profile data and résumé passages to highlight verified vs unsupported requirements.
+- **🎯 Interactive Learning Plan & Progress Tracker**:
+  - Interactive step checkboxes to check off completed milestones.
+  - Live progress bars for each skill gap and overall learning goal completion.
+  - Customizable weekly study-hour settings.
+- **⚡ Flashcards Mode**: Interactive flashcard view allowing users to review target skills, practice action items, and track step completion card-by-card.
 
-## Current Architecture
+---
+
+## 🏗️ System Architecture & Workflow
 
 ```mermaid
 flowchart TD
-    A[Browser UI: Vite + JavaScript] --> B[Local file parsing: PDF / DOCX / TXT]
-    A --> C[Browser local storage: profile / resume / job]
-    A -->|POST /api/analyze| D[Node.js + Express API]
-    D -->|Extract job requirements| E[Ollama: Qwen3-4B-Instruct-2507]
-    D -->|Embed requirement queries and evidence| F[Ollama: Nomic Embed Text v1.5]
-    F --> G[Cosine similarity retrieval over supplied evidence]
-    G -->|Top passage per requirement| E
-    E -->|Evidence status, explanation, learning steps, practice hours| D
-    D -->|JSON response| A
+    subgraph Client [Browser Application]
+        UI[Build Carrier UI]
+        Storage[(Browser Local Storage)]
+        PDF[PDF / DOCX / TXT Parser]
+        Tracker[Progress Tracker & Flashcard Controller]
+    end
+
+    subgraph Backend [Local Server & AI Engine]
+        Server[Express Server: server.js]
+        Ollama[Local Ollama Engine: http://127.0.0.1:11434]
+        LLM[northstar-qwen3: Qwen3-4B-Instruct]
+        Embed[northstar-nomic-embed: Nomic Embed v1.5]
+    end
+
+    UI -->|Import Resume| PDF
+    PDF -->|Extracted Text| Storage
+    UI -->|Store Profile / Progress| Storage
+    UI -->|POST /api/analyze| Server
+    Server -->|1. Extract Job Requirements| LLM
+    Server -->|2. Generate Embeddings| Embed
+    Embed -->|3. Cosine Similarity Match| Server
+    Server -->|4. Assess Support & Generate Learning Plan| LLM
+    Server -->|Analysis JSON Result| UI
+    UI -->|Render Checklist & Progress| Tracker
+    Tracker -->|Update Step Completion| Storage
 ```
 
-The API accepts the job description and relevant profile/résumé text for the current analysis request. It does not persist those requests or contact a hosted model. Profile and résumé data remain in the browser; Ollama runs on the same device.
+---
 
-The current prototype has no accounts, shared database, cloud sync, or multi-user storage. The uploaded résumé dataset is intentionally excluded from Git because it contains personal résumé information.
+## 🤖 Local Models
 
-## Models
+| Purpose                                 | Model                  | Local Ollama Name       | Quantization |
+| :-------------------------------------- | :--------------------- | :---------------------- | :----------- |
+| **Requirement Extraction & Assessment** | Qwen3-4B-Instruct-2507 | `northstar-qwen3`       | Q4_K_M GGUF  |
+| **Semantic Evidence Retrieval**         | Nomic Embed Text v1.5  | `northstar-nomic-embed` | Q4_K_M GGUF  |
 
-| Purpose                                    | Model                  | Local Ollama name       | Quantization |
-| ------------------------------------------ | ---------------------- | ----------------------- | ------------ |
-| Requirement extraction and evidence review | Qwen3-4B-Instruct-2507 | `northstar-qwen3`       | Q4_K_M GGUF  |
-| Semantic evidence retrieval                | Nomic Embed Text v1.5  | `northstar-nomic-embed` | Q4_K_M GGUF  |
+---
 
-Model files are downloaded outside this repository to `%USERPROFILE%\.northstar\models` and imported into Ollama. They are not committed to Git.
+## 🚀 Quick Start
 
-## Run Locally
+### Prerequisites
 
-Requirements: Node.js 20 or newer, Ollama for Windows, and about 3 GB of disk space for the quantized model files.
+- [Node.js](https://nodejs.org/) v20 or newer
+- [Ollama](https://ollama.com/) running locally on `http://127.0.0.1:11434`
+- ~3 GB disk space for quantized model weights
 
-1. Start the Ollama app and confirm its local service is running.
-2. Install project dependencies with `npm install`.
-3. Download and import the models with `npm run models:download`.
-4. Start the API and frontend together with `npm run dev`.
-5. Open [http://127.0.0.1:5173/](http://127.0.0.1:5173/).
+### 1. Installation & Model Download
 
-The development API listens on `127.0.0.1:3001`; Vite proxies `/api` requests to it. For a production-style local run, use `npm start` to build the frontend and serve it from the Node process. Ollama must remain running in either mode.
+```bash
+# Install dependencies
+npm install
 
-## Useful Commands
+# Download local GGUF weights and register models in Ollama
+npm run models:download
+```
 
-```text
+### 2. Start Build Carrier
+
+```bash
+# Build frontend and start the unified server
+npm run dev
+# or
+npm start
+```
+
+Open [http://127.0.0.1:3001/](http://127.0.0.1:3001/) in your browser.
+
+---
+
+## 🛠️ Useful Commands
+
+```bash
+# Build production bundle into dist/
 npm run build
+
+# Format codebase with Prettier
 npm run format
-npx prettier --check index.html src/main.js src/style.css server.js vite.config.js scripts/download-models.js package.json README.md
+
+# Download models to ~/.northstar/models
+npm run models:download
 ```
 
-## Architecture Notes
+---
 
-[qualcomm_resume_rag_architecture.md](qualcomm_resume_rag_architecture.md) documents the proposed longer-term architecture, including PostgreSQL/pgvector, authentication, and Qualcomm deployment options. Those components are not part of the current local prototype.
+## 📌 Architecture Documentation
+
+For details on future multi-tenant scale-out, PostgreSQL/pgvector schemas, and deployment considerations, view [qualcomm_resume_rag_architecture.md](qualcomm_resume_rag_architecture.md).

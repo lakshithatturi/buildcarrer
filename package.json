@@ -4,11 +4,11 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "node scripts/dev.js",
+    "dev": "npm run build && node server.js",
     "build": "vite build",
-    "preview": "vite preview",
+    "preview": "node server.js",
     "start": "npm run build && node server.js",
-    "format": "prettier --write index.html src/main.js src/style.css server.js vite.config.js scripts/download-models.js scripts/dev.js package.json README.md",
+    "format": "prettier --write index.html src/main.js src/style.css server.js scripts/download-models.js scripts/dev.js package.json README.md",
     "models:download": "node scripts/download-models.js"
   },
   "dependencies": {

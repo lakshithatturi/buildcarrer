@@ -1,6 +1,6 @@
 import "./style.css";
 
-const STORAGE_KEY = "northstar-career-workspace-v1";
+const STORAGE_KEY = "build-carrier-workspace-v1";
 const skillTerms = [
   "JavaScript",
   "TypeScript",
@@ -46,7 +46,7 @@ const policyText = {
     paragraphs: [
       [
         "What this app stores",
-        "Profile details, extracted resume text, saved job descriptions, learning plans, and your weekly study-hour setting are stored in this browser. When you analyze a role, the job description and relevant profile/resume text are sent to the local Node.js API and local Ollama models on this device. Requests are not saved by the API or sent to an external service.",
+        "Profile details, extracted resume text, saved job descriptions, learning plans, step progress, and your weekly study-hour setting are stored in this browser. When you analyze a role, the job description and relevant profile/resume text are sent to the local Node.js API and local Ollama models on this device. Requests are not saved by the API or sent to an external service.",
       ],
       [
         "Files and processing",
@@ -68,7 +68,7 @@ const policyText = {
     paragraphs: [
       [
         "A local productivity tool",
-        "BuildCarrers is a browser-based workspace for organizing professional information and reviewing job requirements. It is provided as-is and is not an employment, legal, or recruiting service.",
+        "Build Carrier is a browser-based workspace for organizing professional information and reviewing job requirements. It is provided as-is and is not an employment, legal, or recruiting service.",
       ],
       [
         "Analysis limitations",
@@ -99,6 +99,9 @@ const blankState = {
   job: "",
   analysis: null,
   hoursPerWeek: 5,
+  completedSteps: {},
+  viewMode: "list",
+  currentFlashIndex: 0,
 };
 let state = loadState();
 let toastTimeout;
@@ -111,12 +114,19 @@ function loadState() {
       ...saved,
       profile: { ...blankState.profile, ...saved?.profile },
       resume: { ...blankState.resume, ...saved?.resume },
+      completedSteps: { ...saved?.completedSteps },
       hoursPerWeek:
         Number.isInteger(saved?.hoursPerWeek) &&
         saved.hoursPerWeek >= 1 &&
         saved.hoursPerWeek <= 40
           ? saved.hoursPerWeek
           : blankState.hoursPerWeek,
+      viewMode: ["list", "flash"].includes(saved?.viewMode)
+        ? saved.viewMode
+        : "list",
+      currentFlashIndex: Number.isInteger(saved?.currentFlashIndex)
+        ? saved.currentFlashIndex
+        : 0,
     };
   } catch {
     return structuredClone(blankState);
@@ -360,15 +370,25 @@ function renderLearningPlan() {
   const empty = document.querySelector("#learning-empty");
   const results = document.querySelector("#learning-results");
   const learningList = document.querySelector("#learning-list");
+  const flashcardView = document.querySelector("#flashcard-view");
   const summary = document.querySelector("#learning-summary");
   const noGaps = document.querySelector("#learning-no-gaps");
   const noPlan = document.querySelector("#learning-no-plan");
   const weeklyHoursInput = document.querySelector("#hours-per-week");
 
+  const btnList = document.querySelector("#btn-mode-list");
+  const btnFlash = document.querySelector("#btn-mode-flash");
+
+  if (btnList && btnFlash) {
+    btnList.classList.toggle("active", state.viewMode === "list");
+    btnFlash.classList.toggle("active", state.viewMode === "flash");
+  }
+
   weeklyHoursInput.value = String(state.hoursPerWeek);
   empty.hidden = Boolean(state.analysis);
   results.hidden = !state.analysis;
   learningList.innerHTML = "";
+  flashcardView.innerHTML = "";
   noGaps.hidden = true;
   noPlan.hidden = true;
   summary.textContent = "";
@@ -398,6 +418,33 @@ function renderLearningPlan() {
         (priorityOrder[left.priority] ?? 1) -
         (priorityOrder[right.priority] ?? 1),
     );
+
+  // Overall Progress calculation
+  let totalStepsCount = 0;
+  let completedStepsCount = 0;
+
+  plans.forEach((plan) => {
+    plan.steps.forEach((_, stepIdx) => {
+      totalStepsCount += 1;
+      const stepKey = `${plan.requirement}-${stepIdx}`;
+      if (state.completedSteps[stepKey]) {
+        completedStepsCount += 1;
+      }
+    });
+  });
+
+  const overallPercent =
+    totalStepsCount > 0
+      ? Math.round((completedStepsCount / totalStepsCount) * 100)
+      : 0;
+
+  const progressText = document.querySelector("#overall-progress-text");
+  const progressFill = document.querySelector("#overall-progress-fill");
+  if (progressText && progressFill) {
+    progressText.textContent = `${completedStepsCount} of ${totalStepsCount} steps completed (${overallPercent}%)`;
+    progressFill.style.width = `${overallPercent}%`;
+  }
+
   const totalHours = plans.reduce(
     (total, plan) => total + plan.estimatedHours,
     0,
@@ -406,25 +453,83 @@ function renderLearningPlan() {
 
   summary.textContent = `${plans.length} skill gaps · about ${totalHours} practice hours · roughly ${totalWeeks} sequential weeks at ${state.hoursPerWeek} hours per week`;
 
-  let nextWeek = 1;
-  learningList.innerHTML = plans
-    .map((plan, index) => {
-      const durationWeeks = Math.max(
-        1,
-        Math.ceil(plan.estimatedHours / state.hoursPerWeek),
-      );
-      const firstWeek = nextWeek;
-      const lastWeek = nextWeek + durationWeeks - 1;
-      nextWeek = lastWeek + 1;
-      const priority = priorityOrder[plan.priority] ?? 1;
-      const priorityLabel = ["high", "medium", "low"][priority];
-      const steps = plan.steps
-        .map((step) => `<li>${escapeHtml(step)}</li>`)
-        .join("");
+  if (state.viewMode === "list") {
+    learningList.hidden = false;
+    flashcardView.hidden = true;
 
-      return `<article class="learning-item"><div class="learning-item-head"><div><span class="panel-index">${String(index + 1).padStart(2, "0")} / ${priorityLabel.toUpperCase()} PRIORITY</span><h3>${escapeHtml(plan.requirement)}</h3></div><div class="learning-time"><strong>${plan.estimatedHours}</strong><span>practice hours</span></div></div><div class="learning-timeline">WEEKS ${firstWeek}–${lastWeek} AT ${state.hoursPerWeek} HRS/WEEK</div><ol class="learning-steps">${steps}</ol></article>`;
-    })
-    .join("");
+    let nextWeek = 1;
+    learningList.innerHTML = plans
+      .map((plan, index) => {
+        const durationWeeks = Math.max(
+          1,
+          Math.ceil(plan.estimatedHours / state.hoursPerWeek),
+        );
+        const firstWeek = nextWeek;
+        const lastWeek = nextWeek + durationWeeks - 1;
+        nextWeek = lastWeek + 1;
+        const priority = priorityOrder[plan.priority] ?? 1;
+        const priorityLabel = ["high", "medium", "low"][priority];
+
+        let skillDoneCount = 0;
+        const stepsHtml = plan.steps
+          .map((step, stepIdx) => {
+            const stepKey = `${plan.requirement}-${stepIdx}`;
+            const isDone = Boolean(state.completedSteps[stepKey]);
+            if (isDone) skillDoneCount += 1;
+            return `<li class="step-item ${isDone ? "completed" : ""}"><label class="step-label"><input type="checkbox" class="step-checkbox" data-skill="${escapeHtml(plan.requirement)}" data-step="${stepIdx}" ${isDone ? "checked" : ""} /> <span class="step-text">${escapeHtml(step)}</span></label></li>`;
+          })
+          .join("");
+
+        const skillPercent =
+          plan.steps.length > 0
+            ? Math.round((skillDoneCount / plan.steps.length) * 100)
+            : 0;
+
+        return `<article class="learning-item"><div class="learning-item-head"><div><span class="panel-index">${String(index + 1).padStart(2, "0")} / ${priorityLabel.toUpperCase()} PRIORITY</span><h3>${escapeHtml(plan.requirement)}</h3></div><div class="learning-time"><strong>${plan.estimatedHours}</strong><span>practice hours</span></div></div><div class="learning-skill-progress"><div class="skill-progress-bar"><div class="skill-progress-fill" style="width: ${skillPercent}%"></div></div><span class="skill-progress-note">${skillDoneCount}/${plan.steps.length} steps (${skillPercent}%)</span></div><div class="learning-timeline">WEEKS ${firstWeek}–${lastWeek} AT ${state.hoursPerWeek} HRS/WEEK</div><ul class="learning-steps-list">${stepsHtml}</ul></article>`;
+      })
+      .join("");
+  } else {
+    learningList.hidden = true;
+    flashcardView.hidden = false;
+
+    if (state.currentFlashIndex >= plans.length) {
+      state.currentFlashIndex = 0;
+    }
+
+    const currentPlan = plans[state.currentFlashIndex];
+    const cardPriorityLabel = (currentPlan.priority || "medium").toUpperCase();
+
+    let flashSkillDoneCount = 0;
+    const flashStepsHtml = currentPlan.steps
+      .map((step, stepIdx) => {
+        const stepKey = `${currentPlan.requirement}-${stepIdx}`;
+        const isDone = Boolean(state.completedSteps[stepKey]);
+        if (isDone) flashSkillDoneCount += 1;
+        return `<li class="step-item ${isDone ? "completed" : ""}"><label class="step-label"><input type="checkbox" class="step-checkbox" data-skill="${escapeHtml(currentPlan.requirement)}" data-step="${stepIdx}" ${isDone ? "checked" : ""} /> <span class="step-text">${escapeHtml(step)}</span></label></li>`;
+      })
+      .join("");
+
+    flashcardView.innerHTML = `
+      <div class="flashcard-container">
+        <div class="flashcard-header">
+          <span class="flashcard-counter">CARD ${state.currentFlashIndex + 1} OF ${plans.length}</span>
+          <span class="status-tag status-review">${cardPriorityLabel} PRIORITY</span>
+        </div>
+        <div class="flashcard-card" id="active-flashcard">
+          <div class="flashcard-skill-title">${escapeHtml(currentPlan.requirement)}</div>
+          <div class="flashcard-hours-tag">⏱ Estimated Practice: ${currentPlan.estimatedHours} hours</div>
+          <div class="flashcard-divider"></div>
+          <div class="flashcard-section-title">Action Steps & Review Checkpoints:</div>
+          <ul class="learning-steps-list flashcard-steps">${flashStepsHtml}</ul>
+        </div>
+        <div class="flashcard-nav">
+          <button class="button button-outline" id="btn-flash-prev" ${state.currentFlashIndex === 0 ? "disabled" : ""}>← Previous Card</button>
+          <span class="flash-progress-note">${flashSkillDoneCount}/${currentPlan.steps.length} steps completed</span>
+          <button class="button button-dark" id="btn-flash-next" ${state.currentFlashIndex === plans.length - 1 ? "disabled" : ""}>Next Card →</button>
+        </div>
+      </div>
+    `;
+  }
 }
 
 function render() {
@@ -625,6 +730,44 @@ document
       else showToast(`No exact match for “${query}” in your saved workspace.`);
     }
   });
+document.addEventListener("click", (event) => {
+  const toggleBtn = event.target.closest(".toggle-btn");
+  if (toggleBtn && toggleBtn.dataset.mode) {
+    state.viewMode = toggleBtn.dataset.mode;
+    saveState();
+    return;
+  }
+
+  if (event.target.id === "btn-flash-prev") {
+    if (state.currentFlashIndex > 0) {
+      state.currentFlashIndex -= 1;
+      saveState();
+    }
+    return;
+  }
+
+  if (event.target.id === "btn-flash-next") {
+    const missingCount = state.analysis?.missing?.length || 0;
+    if (state.currentFlashIndex < missingCount - 1) {
+      state.currentFlashIndex += 1;
+      saveState();
+    }
+    return;
+  }
+});
+
+document.addEventListener("change", (event) => {
+  if (event.target.classList.contains("step-checkbox")) {
+    const { skill, step } = event.target.dataset;
+    const key = `${skill}-${step}`;
+    state.completedSteps[key] = event.target.checked;
+    saveState();
+    if (event.target.checked) {
+      showToast(`Completed step for ${skill}!`);
+    }
+  }
+});
+
 document.addEventListener("keydown", (event) => {
   if (
     event.key === "/" &&
@@ -632,6 +775,21 @@ document.addEventListener("keydown", (event) => {
   ) {
     event.preventDefault();
     document.querySelector("#global-search").focus();
+  }
+  if (
+    state.viewMode === "flash" &&
+    !["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)
+  ) {
+    if (event.key === "ArrowLeft" && state.currentFlashIndex > 0) {
+      state.currentFlashIndex -= 1;
+      saveState();
+    } else if (
+      event.key === "ArrowRight" &&
+      state.currentFlashIndex < (state.analysis?.missing?.length || 0) - 1
+    ) {
+      state.currentFlashIndex += 1;
+      saveState();
+    }
   }
 });
 

@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#e8eeeb" />
-    <meta name="description" content="BuildCarrers career workspace." />
-    <title>BuildCarrers</title>
+    <meta name="description" content="Build Carrier career workspace." />
+    <title>Build Carrier</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -16,9 +16,9 @@
   <body>
     <div class="app-shell">
       <aside class="sidebar">
-        <a class="brand" href="#overview" aria-label="BuildCarrers home">
-          <span class="brand-mark" aria-hidden="true">B</span>
-          <span><strong>BuildCarrers</strong></span>
+        <a class="brand" href="#overview" aria-label="Build Carrier home">
+          <span class="brand-mark" aria-hidden="true">BC</span>
+          <span><strong>Build Carrier</strong></span>
         </a>
         <label class="search-box">
           <span class="search-mark" aria-hidden="true"></span>
@@ -395,6 +395,43 @@
                     <span>hours / week</span>
                   </span>
                 </label>
+                <div class="learning-view-toggle">
+                  <span class="field-label">VIEW MODE</span>
+                  <div class="button-group">
+                    <button
+                      class="toggle-btn active"
+                      id="btn-mode-list"
+                      data-mode="list"
+                    >
+                      Timeline & Tracking
+                    </button>
+                    <button
+                      class="toggle-btn"
+                      id="btn-mode-flash"
+                      data-mode="flash"
+                    >
+                      ⚡ Flashcards Mode
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div
+                class="work-panel overall-progress-panel"
+                id="overall-progress-panel"
+              >
+                <div class="progress-info">
+                  <span class="progress-title">LEARNING PROGRESS TRACKER</span>
+                  <strong id="overall-progress-text"
+                    >0 / 0 steps completed (0%)</strong
+                  >
+                </div>
+                <div class="progress-bar-bg">
+                  <div
+                    class="progress-bar-fill"
+                    id="overall-progress-fill"
+                    style="width: 0%"
+                  ></div>
+                </div>
               </div>
               <div
                 class="learning-summary"
@@ -410,10 +447,11 @@
                 analysis again to generate a complete plan.
               </p>
               <div class="learning-list" id="learning-list"></div>
+              <div class="flashcard-view" id="flashcard-view" hidden></div>
               <p class="learning-disclaimer">
                 Practice-hour estimates are model-generated approximations, not
-                promises of proficiency or employment. Review them against your
-                background and learning pace.
+                promises of proficiency or employment. Progress is tracked
+                locally in this browser.
               </p>
             </section>
           </section>
