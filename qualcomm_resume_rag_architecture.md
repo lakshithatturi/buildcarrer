@@ -1,4 +1,6 @@
-# AI Resume & Skill-Gap Platform — System Architecture
+# BuildCarrers — Proposed System Architecture
+
+> **Status:** The sections below describe the proposed target architecture. The current implementation is a local-first Vite/JavaScript frontend, a Node.js/Express API, and Qwen3/Nomic GGUF models served by Ollama. It has no account service, PostgreSQL database, or pgvector store yet. See the [README](README.md) for the implemented system and local setup.
 
 ## 1. Project Overview
 
