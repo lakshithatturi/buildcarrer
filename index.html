@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#e8eeeb" />
+    <meta name="description" content="BuildCarrers career workspace." />
+    <title>BuildCarrers</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="brand" href="#overview" aria-label="BuildCarrers home">
+          <span class="brand-mark" aria-hidden="true">B</span>
+          <span><strong>BuildCarrers</strong></span>
+        </a>
+        <label class="search-box">
+          <span class="search-mark" aria-hidden="true"></span>
+          <input
+            id="global-search"
+            type="search"
+            placeholder="Find in workspace"
+            aria-label="Find in workspace"
+          />
+          <kbd>/</kbd>
+        </label>
+        <nav class="primary-nav" aria-label="Main navigation">
+          <button class="nav-item active" data-view="overview">Overview</button>
+          <button class="nav-item" data-view="profile">Profile</button>
+          <button class="nav-item" data-view="resume">Resume</button>
+          <button class="nav-item" data-view="match">Job analysis</button>
+          <button class="nav-item" data-view="learning">Learning plan</button>
+        </nav>
+        <div class="sidebar-bottom">
+          <div class="privacy-stamp">
+            <span
+              ><b>LOCAL</b
+              ><small>Profile and resume stay on this device</small></span
+            >
+          </div>
+          <div class="legal-links">
+            <button data-policy="privacy">Privacy</button><span>·</span
+            ><button data-policy="terms">Terms</button>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main-area">
+        <header class="topbar">
+          <div class="topbar-right">
+            <span class="local-pill"
+              ><span class="status-dot"></span
+              ><span id="model-status">CHECKING MODELS</span></span
+            >
+          </div>
+        </header>
+
+        <div class="page-wrap">
+          <section class="page-heading">
+            <h1 id="page-title">Overview</h1>
+          </section>
+
+          <section class="metrics-grid" aria-label="Workspace summary">
+            <article class="metric metric-teal">
+              <div class="metric-label">PROFILE COMPLETION</div>
+              <div class="metric-value" id="metric-profile">
+                0<span>%</span>
+              </div>
+              <div class="metric-foot">
+                <span class="metric-indicator"></span
+                ><span id="profile-metric-note">No profile details yet</span>
+              </div>
+            </article>
+            <article class="metric">
+              <div class="metric-label">RESUME EVIDENCE</div>
+              <div class="metric-value" id="metric-evidence">00</div>
+              <div class="metric-foot">Extracted skill signals</div>
+            </article>
+            <article class="metric">
+              <div class="metric-label">JOB REQUIREMENTS</div>
+              <div class="metric-value" id="metric-requirements">00</div>
+              <div class="metric-foot">From current description</div>
+            </article>
+            <article class="metric metric-amber">
+              <div class="metric-label">EVIDENCE MATCH</div>
+              <div class="metric-value" id="metric-match">--</div>
+              <div class="metric-foot" id="match-metric-note">
+                Add a job description
+              </div>
+            </article>
+          </section>
+
+          <section class="view-panel active" id="view-overview">
+            <div class="section-heading">
+              <h2>Current focus</h2>
+            </div>
+            <div class="focus-grid">
+              <article class="work-panel focus-panel">
+                <div class="panel-head">
+                  <div>
+                    <h3 id="focus-name">Profile not started</h3>
+                  </div>
+                </div>
+                <p class="panel-copy" id="focus-role">
+                  Your headline and experience will appear here after setup.
+                </p>
+                <div class="panel-divider"></div>
+                <div class="mini-label">SKILLS ON FILE</div>
+                <div class="skill-list" id="focus-skills">
+                  <span class="empty-inline">No skills added</span>
+                </div>
+                <div class="panel-footer">
+                  <button class="quiet-button" data-view="profile">
+                    Edit profile
+                  </button>
+                </div>
+              </article>
+
+              <article class="work-panel resume-panel">
+                <div class="panel-head">
+                  <div>
+                    <h3>Resume</h3>
+                  </div>
+                  <span class="file-type-tag">PDF · DOCX · TXT</span>
+                </div>
+                <div class="upload-well" id="upload-well">
+                  <div class="upload-symbol" aria-hidden="true">
+                    <span></span><i></i>
+                  </div>
+                  <strong id="resume-file-label">Bring in your resume</strong>
+                  <span id="resume-file-meta"
+                    >Text is extracted locally in your browser.</span
+                  >
+                  <button class="button button-outline" id="upload-trigger">
+                    Choose a file
+                  </button>
+                  <input
+                    id="resume-file"
+                    type="file"
+                    accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+                    hidden
+                  />
+                </div>
+                <div class="panel-footer">
+                  <button class="quiet-button" data-view="resume">
+                    Review evidence
+                  </button>
+                </div>
+              </article>
+            </div>
+
+            <div class="section-heading lower-heading">
+              <h2>Analyze an opportunity</h2>
+            </div>
+            <section class="work-panel job-panel">
+              <div class="job-intro">
+                <div>
+                  <h3>Job description</h3>
+                </div>
+              </div>
+              <label class="field-label" for="job-description"
+                >JOB DESCRIPTION</label
+              >
+              <textarea
+                id="job-description"
+                class="job-textarea"
+                placeholder="Paste the role description here to extract skills and requirements..."
+                rows="4"
+              ></textarea>
+              <div class="job-actions">
+                <span id="job-save-state">Nothing analyzed yet</span
+                ><button class="button button-dark" id="analyze-job">
+                  Analyze description <span aria-hidden="true">→</span>
+                </button>
+              </div>
+              <div class="match-results" id="match-results" hidden></div>
+            </section>
+
+            <div class="section-heading lower-heading">
+              <h2>Skills in context</h2>
+              <button class="text-action" data-view="match">
+                Full analysis <span aria-hidden="true">↗</span>
+              </button>
+            </div>
+            <section class="work-panel ledger-panel">
+              <div class="ledger-head">
+                <span>SKILL</span><span>PROFILE</span><span>RESUME</span
+                ><span>TARGET ROLE</span><span>STATUS</span>
+              </div>
+              <div class="ledger-empty" id="ledger-empty">
+                <span class="empty-line"></span>
+                <p>
+                  Add a resume or profile skills to build your evidence ledger.
+                </p>
+              </div>
+              <div class="ledger-rows" id="ledger-rows"></div>
+            </section>
+          </section>
+
+          <section class="view-panel" id="view-profile">
+            <div class="section-heading">
+              <h2>Profile details</h2>
+            </div>
+            <form class="work-panel form-panel" id="profile-form">
+              <div class="form-grid">
+                <label class="field-wrap"
+                  ><span class="field-label">FULL NAME</span
+                  ><input
+                    id="profile-name"
+                    name="name"
+                    autocomplete="name"
+                    placeholder="Your name"
+                /></label>
+                <label class="field-wrap"
+                  ><span class="field-label">PROFESSIONAL HEADLINE</span
+                  ><input
+                    id="profile-headline"
+                    name="headline"
+                    placeholder="e.g. Product designer"
+                /></label>
+                <label class="field-wrap"
+                  ><span class="field-label">LOCATION</span
+                  ><input
+                    id="profile-location"
+                    name="location"
+                    autocomplete="address-level2"
+                    placeholder="City, region"
+                /></label>
+                <label class="field-wrap"
+                  ><span class="field-label">EMAIL</span
+                  ><input
+                    id="profile-email"
+                    name="email"
+                    type="email"
+                    autocomplete="email"
+                    placeholder="name@example.com"
+                /></label>
+                <label class="field-wrap field-full"
+                  ><span class="field-label">SKILLS</span
+                  ><textarea
+                    id="profile-skills"
+                    name="skills"
+                    rows="3"
+                    placeholder="Separate skills with commas"
+                  ></textarea
+                  ><small class="field-help"
+                    >Use terms you can support with real experience.</small
+                  ></label
+                >
+                <label class="field-wrap field-full"
+                  ><span class="field-label">EXPERIENCE NOTES</span
+                  ><textarea
+                    id="profile-experience"
+                    name="experience"
+                    rows="5"
+                    placeholder="Add role, organization, dates, and concrete outcomes..."
+                  ></textarea>
+                </label>
+              </div>
+              <div class="form-footer">
+                <span class="save-message" id="profile-save-message"
+                  >Changes save in this browser.</span
+                ><button class="button button-dark" type="submit">
+                  Save profile <span aria-hidden="true">→</span>
+                </button>
+              </div>
+            </form>
+          </section>
+
+          <section class="view-panel" id="view-resume">
+            <div class="section-heading">
+              <h2>Resume evidence</h2>
+              <span class="section-caption">PDF · DOCX · TXT</span>
+            </div>
+            <section class="work-panel resume-detail-panel">
+              <div class="resume-detail-head">
+                <div>
+                  <h3 id="resume-detail-name">No resume in this workspace</h3>
+                  <p id="resume-detail-description">
+                    Import a resume to extract text and identify the skills it
+                    supports.
+                  </p>
+                </div>
+                <button class="button button-outline" id="resume-detail-upload">
+                  Choose file
+                </button>
+              </div>
+              <div class="document-preview" id="document-preview">
+                <div class="preview-empty">
+                  <span class="preview-page">+</span>
+                  <p>Extracted resume text will be shown here for review.</p>
+                </div>
+              </div>
+              <input
+                id="resume-file-secondary"
+                type="file"
+                accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+                hidden
+              />
+              <div class="resume-actions">
+                <button
+                  class="quiet-button danger-button"
+                  id="remove-resume"
+                  hidden
+                >
+                  Remove resume</button
+                ><span id="resume-detail-status">Local processing only</span>
+              </div>
+            </section>
+          </section>
+
+          <section class="view-panel" id="view-match">
+            <div class="section-heading">
+              <h2>Job analysis</h2>
+            </div>
+            <section class="work-panel job-panel standalone-job">
+              <div class="job-intro">
+                <div>
+                  <h3>Job description</h3>
+                </div>
+              </div>
+              <label class="field-label" for="job-description-secondary"
+                >PASTE ROLE DESCRIPTION</label
+              >
+              <textarea
+                id="job-description-secondary"
+                class="job-textarea"
+                placeholder="Paste job description..."
+                rows="8"
+              ></textarea>
+              <div class="job-actions">
+                <span id="job-save-state-secondary"
+                  >No role description saved</span
+                ><button class="button button-dark" id="analyze-job-secondary">
+                  Analyze description <span aria-hidden="true">→</span>
+                </button>
+              </div>
+              <div
+                class="match-results"
+                id="match-results-secondary"
+                hidden
+              ></div>
+            </section>
+            <div class="section-heading lower-heading">
+              <h2>Requirement evidence</h2>
+            </div>
+            <section class="work-panel ledger-panel">
+              <div class="ledger-head">
+                <span>SKILL</span><span>PROFILE</span><span>RESUME</span
+                ><span>TARGET ROLE</span><span>STATUS</span>
+              </div>
+              <div class="ledger-empty" id="ledger-empty-secondary">
+                <span class="empty-line"></span>
+                <p>
+                  Run an analysis to compare the role with your information.
+                </p>
+              </div>
+              <div class="ledger-rows" id="ledger-rows-secondary"></div>
+            </section>
+          </section>
+
+          <section class="view-panel" id="view-learning">
+            <section class="work-panel learning-empty" id="learning-empty">
+              <h3>Analyze a role to build your learning plan</h3>
+              <p>
+                The plan will prioritize skills not yet supported by your
+                profile or resume and estimate focused practice time.
+              </p>
+              <button class="button button-dark" data-view="match">
+                Open job analysis <span aria-hidden="true">→</span>
+              </button>
+            </section>
+            <section class="learning-results" id="learning-results" hidden>
+              <div class="work-panel learning-controls">
+                <label
+                  class="field-wrap weekly-hours-field"
+                  for="hours-per-week"
+                >
+                  <span class="field-label">HOURS PER WEEK</span>
+                  <span class="weekly-hours-input">
+                    <input
+                      id="hours-per-week"
+                      type="number"
+                      min="1"
+                      max="40"
+                      step="1"
+                      value="5"
+                    />
+                    <span>hours / week</span>
+                  </span>
+                </label>
+              </div>
+              <div
+                class="learning-summary"
+                id="learning-summary"
+                aria-live="polite"
+              ></div>
+              <p class="learning-message" id="learning-no-gaps" hidden>
+                Your current profile and resume support all extracted job
+                requirements. No learning gaps were identified.
+              </p>
+              <p class="learning-message" id="learning-no-plan" hidden>
+                A timeline was not returned for every skill gap. Run the job
+                analysis again to generate a complete plan.
+              </p>
+              <div class="learning-list" id="learning-list"></div>
+              <p class="learning-disclaimer">
+                Practice-hour estimates are model-generated approximations, not
+                promises of proficiency or employment. Review them against your
+                background and learning pace.
+              </p>
+            </section>
+          </section>
+
+          <footer class="page-footer">
+            <div>
+              <button data-policy="privacy">Privacy</button
+              ><button data-policy="terms">Terms</button>
+            </div>
+          </footer>
+        </div>
+      </main>
+    </div>
+    <dialog class="policy-dialog" id="policy-dialog">
+      <div class="policy-head">
+        <span class="eyebrow" id="policy-kicker">POLICY</span
+        ><button
+          class="dialog-close"
+          id="policy-close"
+          aria-label="Close policy"
+        >
+          ×
+        </button>
+      </div>
+      <article id="policy-content"></article>
+    </dialog>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

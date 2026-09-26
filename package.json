@@ -1,0 +1,24 @@
+{
+  "name": "career-control-center",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -k \"node server.js\" \"vite --host 127.0.0.1\"",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "npm run build && node server.js",
+    "format": "prettier --write index.html src/main.js src/style.css server.js vite.config.js scripts/download-models.js package.json",
+    "models:download": "node scripts/download-models.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "mammoth": "^1.9.0",
+    "pdfjs-dist": "^4.10.38"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "prettier": "^3.5.3",
+    "vite": "^6.1.0"
+  }
+}

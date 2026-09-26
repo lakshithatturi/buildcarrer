@@ -1,0 +1,9 @@
+node_modules/
+dist/
+resumes_dataset.jsonl
+*.gguf
+*.gguf.partial
+.env
+.env.*
+!.env.example
+*.log
